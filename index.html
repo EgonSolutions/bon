@@ -183,12 +183,12 @@ let remote={},shared=false,dirty={},mode='wait';
 const get=k=>shared?(remote[k]||def(k)):(local[k]||remote[k]||def(k));
 
 function split(){
-  const tot={egon:0,v1:0,v2:0},cnt={egon:0,v1:0,v2:0},per={};
+  const tot={egon:0,v1:0,v2:0,open:0},cnt={egon:0,v1:0,v2:0,open:0},per={};
   for(const it of I){
     const P=SL.filter(s=>get(s.k).items.includes(it.id)).map(s=>s.k);
-    const pay=P.length?P:['egon'];
-    const base=Math.floor(it.c/pay.length);let rem=it.c-base*pay.length;
-    for(const k of pay){tot[k]+=base+(rem>0?1:0);if(rem>0)rem--}
+    if(!P.length){tot.open+=it.c;cnt.open++}
+    else{const base=Math.floor(it.c/P.length);let rem=it.c-base*P.length;
+    for(const k of P){tot[k]+=base+(rem>0?1:0);if(rem>0)rem--}}
     for(const k of P)cnt[k]++;
     per[it.id]=P;
   }
@@ -223,6 +223,7 @@ function overviewText(){
   const R=split(),L=[`Boodschappen 21/11, totaal ${eur(TOTAL)}`];
   for(const s of SL.slice(1)){const v=get(s.k),its=I.filter(x=>v.items.includes(x.id)).map(x=>x.s);L.push(`${v.name}: ${eur(R.tot[s.k])}${its.length?' ('+its.join(', ')+')':''}`)}
   L.push(`Egon zelf: ${eur(R.tot.egon)}`);
+  if(R.tot.open)L.push(`Nog niet verdeeld: ${eur(R.tot.open)}`);
   return L.join('\n');
 }
 const msg=()=>me==='egon'?overviewText():friendText(me);
@@ -240,7 +241,7 @@ function paint(){
   for(const it of I){
     const b=$('r'+it.id),P=R.per[it.id];
     b.setAttribute('aria-pressed',String(!!(me&&P.includes(me))));
-    b.querySelector('small').textContent=P.length>1?`${eur(Math.round(it.c/P.length))} p.p.`:(P.length?'':'blijft bij Egon');
+    b.querySelector('small').textContent=P.length>1?`${eur(Math.round(it.c/P.length))} p.p.`:(P.length?'':'nog niet aangevinkt');
     b.querySelector('.dots').replaceChildren(...P.map(k=>{const i=document.createElement('i');i.style.setProperty('--c',`var(${slot(k).c})`);i.textContent=get(k).name;return i}));
   }
   for(const c of $('who').children){
@@ -253,7 +254,7 @@ function paint(){
     const v=get(s.k),t=R.tot[s.k],n=R.cnt[s.k];
     const info=s.k==='egon'?`${n} items · eigen deel`:`${n} items · te betalen aan Egon`;
     return `<div class="person" style="--c:var(${s.c})"><div class="ph"><span class="pn">${esc(v.name)}${s.k===me?' (jij)':''}</span><span class="pa mono">${eur(t)}</span></div><div class="meter"><span style="width:${(t/TOTAL*100).toFixed(1)}%"></span></div><small>${info}</small></div>`;
-  }).join('');
+  }).join('')+(R.tot.open?`<div class="person" style="--c:var(--muted)"><div class="ph"><span class="pn">Nog niet verdeeld</span><span class="pa mono">${eur(R.tot.open)}</span></div><div class="meter"><span style="width:${(R.tot.open/TOTAL*100).toFixed(1)}%"></span></div><small>${R.cnt.open} ${R.cnt.open===1?'item dat':'items die'} nog niemand aanvinkte</small></div>`:'');
   $('status').textContent=STATUS[mode]();
   $('copy').textContent=me==='egon'?'Kopieer overzicht':'Kopieer mijn keuze';
   $('wa').href='https://wa.me/?text='+encodeURIComponent(me?msg():'');
