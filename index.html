@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carrefour-bon delen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: losjes en duidelijk, een bon tussen vrienden
+   IDEA: de kassabon zelf, waarop iedereen zijn eigen lijnen afvinkt
+   PICTURE: een witte bonstrook met gekartelde randen; per lijn wie meedoet
+   COLOUR and TYPE: kobalt grond, wit papier, drie persoonskleuren; Archivo, bedragen in Plex Mono
+   LAYOUT: titel en keuze bovenaan, bon links, verdeling rechts; smal: alles onder elkaar met vaste balk */
+:root{--ground:#1736c4;--paper:#fff;--ink:#14161d;--muted:#5f6475;--line:#dde0e9;--soft:#f1f3f9;--p0:#1736c4;--p1:#cf4118;--p2:#0a7f6f;--dotink:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--ground:#0c1238;--paper:#161a2d;--ink:#eceef6;--muted:#a0a6bb;--line:#2c3252;--soft:#1e2340;--p0:#8099ff;--p1:#ff8a5f;--p2:#3fd0b9;--dotink:#0c1238;color-scheme:dark}}
+:root[data-theme=dark]{--ground:#0c1238;--paper:#161a2d;--ink:#eceef6;--muted:#a0a6bb;--line:#2c3252;--soft:#1e2340;--p0:#8099ff;--p1:#ff8a5f;--p2:#3fd0b9;--dotink:#0c1238;color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif;overflow-x:clip}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.wrap{max-width:1080px;margin:0 auto;padding:clamp(22px,4vw,48px) max(4vw,14px) 130px}
+header{color:#fff}
+h1{font-size:clamp(32px,6vw,46px);line-height:1.05;font-weight:800;font-stretch:110%;margin:0 0 8px;text-wrap:balance}
+.lead{margin:0;color:rgba(255,255,255,.85)}
+.lab{display:block;margin:22px 0 8px;font-weight:700}
+.who{display:flex;flex-wrap:wrap;gap:8px;border-radius:999px}
+.who.pulse{animation:pulse .9s}
+@keyframes pulse{30%{transform:translateX(-6px)}60%{transform:translateX(5px)}}
+.chip{min-height:48px;padding:6px 18px 6px 8px;border-radius:999px;border:2px solid rgba(255,255,255,.4);background:transparent;color:#fff;font:700 16px Archivo,sans-serif;display:inline-flex;align-items:center;gap:10px;cursor:pointer}
+.chip .dot{width:30px;height:30px;border-radius:50%;background:var(--c);color:var(--dotink);display:grid;place-items:center;font-size:14px;box-shadow:0 0 0 2px #fff}
+.chip[aria-pressed=true]{background:#fff;color:#14161d;border-color:#fff}
+.namebox{margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.namebox label{font-weight:700}
+.namebox input{font:16px Archivo,sans-serif;min-height:46px;padding:0 14px;border-radius:12px;border:0;width:min(260px,100%);background:#fff;color:#14161d}
+.hint{margin:16px 0 0;color:rgba(255,255,255,.85);max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:28px;margin-top:30px}
+@media(min-width:900px){.grid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start}.side{position:sticky;top:16px}}
+.bon{position:relative;background:var(--paper);padding:20px clamp(12px,3vw,26px) 26px;filter:drop-shadow(0 18px 28px rgba(0,0,30,.3));margin:10px 0}
+.bon::before,.bon::after{content:"";position:absolute;left:0;right:0;height:10px;background-size:14px 10px;background-repeat:repeat-x}
+.bon::before{top:-10px;background-image:linear-gradient(to top right,var(--paper) 50%,transparent 51%),linear-gradient(to top left,var(--paper) 50%,transparent 51%)}
+.bon::after{bottom:-10px;background-image:linear-gradient(to bottom right,var(--paper) 50%,transparent 51%),linear-gradient(to bottom left,var(--paper) 50%,transparent 51%)}
+.bonhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--muted);padding-bottom:10px}
+.tools{display:flex;gap:6px}
+.mini{font:600 14px Archivo,sans-serif;min-height:40px;padding:0 12px;border-radius:10px;border:1.5px solid var(--line);background:none;color:var(--ink);cursor:pointer}
+.sec h2{display:flex;justify-content:space-between;gap:12px;font-size:19px;margin:18px 0 4px;padding-top:12px;border-top:2px solid var(--ink)}
+.sec h2 .mono{font-size:15px;font-weight:600}
+.row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:2px 12px;align-items:start;width:100%;text-align:left;padding:12px 6px;border:0;border-top:1px dashed var(--line);background:none;color:inherit;font:inherit;cursor:pointer;border-radius:0}
+.row:hover{background:var(--soft)}
+.tick{width:26px;height:26px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;margin-top:1px}
+.row[aria-pressed=true] .tick{background:var(--me);border-color:var(--me);animation:pop .2s}
+.row[aria-pressed=true] .tick::after{content:"";width:12px;height:7px;border:3px solid var(--dotink);border-top:0;border-right:0;transform:translate(0,-2px) rotate(-45deg)}
+.nome .tick{border-style:dashed}
+@keyframes pop{50%{transform:scale(1.18)}}
+.name{display:block;font-weight:650;line-height:1.25}
+.sub{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.amt{text-align:right;white-space:nowrap}
+.amt b{font-weight:600}
+.amt small{display:block;font-size:13px;color:var(--muted)}
+.dots{grid-column:2/4;display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.dots:empty{display:none}
+.dots i{font-style:normal;font-size:13px;font-weight:700;line-height:22px;padding:0 9px;border-radius:999px;background:var(--c);color:var(--dotink);white-space:nowrap}
+.foot{display:flex;justify-content:space-between;align-items:baseline;border-top:2px dashed var(--ink);margin-top:14px;padding-top:12px;font-weight:700}
+.foot .mono{font-size:clamp(24px,5vw,30px)}
+.card{background:var(--paper);border-radius:18px;padding:20px clamp(14px,3vw,24px);margin-bottom:18px}
+.card h2{font-size:22px;margin:0 0 12px;line-height:1.15}
+.person{padding:12px 0;border-top:1px solid var(--line)}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.pn{font-weight:700}
+.pa{font-size:clamp(22px,4vw,26px);font-weight:600;white-space:nowrap}
+.meter{height:8px;border-radius:99px;background:var(--soft);margin:6px 0 4px;overflow:hidden}
+.meter span{display:block;height:100%;background:var(--c);border-radius:99px;transition:width .3s}
+.person small{color:var(--muted);font-size:13px}
+.status{font-size:14px;color:var(--muted);margin:12px 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:12px;border:0;background:var(--ink);color:var(--paper);font:700 16px Archivo,sans-serif;cursor:pointer;text-decoration:none}
+.btn.ghost{background:none;color:var(--ink);border:2px solid var(--line)}
+textarea{width:100%;font:15px/1.4 "IBM Plex Mono",monospace;padding:10px;border-radius:12px;border:1.5px solid var(--line);background:var(--soft);color:var(--ink);margin-top:10px}
+.note{font-size:14px;color:var(--muted);margin:10px 0 0}
+.card p{margin:0}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #ffb627;outline-offset:2px}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px max(4vw,14px) calc(10px + env(safe-area-inset-bottom));background:var(--paper);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,30,.18)}
+.bar small{display:block;font-size:13px;color:var(--muted)}
+.bar b{font-size:24px;font-weight:600}
+@media(min-width:900px){.bar{display:none}.wrap{padding-bottom:48px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Boodschappen, zaterdag 21 november</h1>
+    <p class="lead">Carrefour <span class="mono">€116,80</span> + groenten <span class="mono">€25,00</span> · alles betaald door Egon</p>
+    <span class="lab" id="wholab">Wie ben jij?</span>
+    <div class="who" id="who" role="group" aria-labelledby="wholab"></div>
+    <p class="hint">Vink aan waarvoor je meebetaalt. Elk item wordt gelijk verdeeld over wie het aanvinkt; Egon staat standaard bij alles.</p>
+  </header>
+
+  <div class="grid">
+    <main>
+      <div class="bon" id="bon">
+        <div class="bonhead mono"><span>Kassabon · 21/11/2026 · 19:34</span>
+          <span class="tools"><button type="button" class="mini" id="all">Alles</button><button type="button" class="mini" id="none">Niets</button></span>
+        </div>
+        <div id="list"></div>
+        <div class="foot"><span>Totaal</span><span class="mono">€141,80</span></div>
+      </div>
+    </main>
+    <aside class="side">
+      <section class="card">
+        <h2>Verdeling</h2>
+        <div id="people"></div>
+        <p class="status" id="status">Keuzes worden op dit toestel bewaard.</p>
+        <div class="actions">
+          <button type="button" class="btn" id="copy">Kopieer mijn keuze</button>
+          <a class="btn ghost" id="wa" href="https://wa.me/" target="_blank" rel="noopener">Via WhatsApp</a>
+        </div>
+        <textarea id="fb" rows="7" readonly hidden aria-label="Tekst om te kopiëren"></textarea>
+      </section>
+      <section class="card" id="imp" hidden>
+        <h2>Keuze van een vriend inlezen</h2>
+        <p>Plak het bericht dat je vriend doorstuurde. De regel met "code:" volstaat.</p>
+        <textarea id="paste" rows="4" aria-label="Bericht van een vriend"></textarea>
+        <div class="actions"><button type="button" class="btn ghost" id="read">Inlezen</button></div>
+        <p class="note" id="impmsg" aria-live="polite"></p>
+      </section>
+    </aside>
+  </div>
+</div>
+<div class="bar" id="bar" hidden>
+  <div><small id="barlab">Jouw deel</small><b class="mono" id="barval">€0,00</b></div>
+  <button type="button" class="btn" id="copy2">Kopieer</button>
+</div>
+
+<script>
+{
+const G=[{k:'bier',t:'Bier'},{k:'drank',t:'Frisdrank en water'},{k:'eten',t:'Eten en snoep'},{k:'ander',t:'Andere winkel'}];
+const I=[
+{id:1,g:'bier',n:'St-Feuillien 4×33 cl',s:'St-Feuillien',d:'incl. €0,40 leeggoed',r:'ST FEUIL. 4X33CL',c:949},
+{id:2,g:'bier',n:'Corona 6×33 cl',s:'Corona',d:'2 × €8,99',r:'CORONA 6X33CL',c:1798},
+{id:3,g:'bier',n:'Paix-Dieu Tripel 75 cl',s:'Paix-Dieu',d:'',r:'P-DIEU TR.75CL+L',c:705},
+{id:4,g:'bier',n:'Orval 4-pack',s:'Orval',d:'incl. €0,40 leeggoed',r:'ORVAL TRAPPIST 4X',c:939},
+{id:5,g:'bier',n:'Flying Fish 6×33 cl',s:'Flying Fish',d:'',r:'FLYING FISH 6X33CL',c:1019},
+{id:6,g:'bier',n:'Barbar 4×33 cl',s:'Barbar',d:'incl. €1,60 leeggoed',r:'BARBAR 4X33CL',c:929},
+{id:7,g:'drank',n:'Vittel 1,5 L',s:'Vittel',d:'3 × €0,85',r:'VITTEL 1L5',c:255},
+{id:8,g:'drank',n:'Oasis Tropical 2 L',s:'Oasis',d:'',r:'OASIS TROPICAL 2L',c:319},
+{id:9,g:'drank',n:'Almdudler 1 L',s:'Almdudler',d:'2 × €2,99',r:'ALMDUDLER 1L',c:598},
+{id:10,g:'drank',n:'Aquarius Red 50 cl',s:'Aquarius Red',d:'2 × €1,89',r:'AQUAR RED 50CL',c:378},
+{id:11,g:'drank',n:'AQ Extra 33 cl',s:'AQ Extra',d:'2 × €1,14',r:'AQ.EXTRA 33CL',c:228},
+{id:12,g:'drank',n:'Innocent Revitalise 300 ml',s:'Innocent',d:'3 × €2,82',r:'INN.REVITALISE 300',c:846},
+{id:13,g:'drank',n:'Red Bull 25 cl',s:'Red Bull',d:'',r:'RED BULL REG.25CL',c:199},
+{id:14,g:'eten',n:'Bananen Chiquita',s:'Bananen',d:'0,854 kg × €2,59',r:'BANANEN CHIQUITA',c:221},
+{id:15,g:'eten',n:'Saucisson varken 100 g',s:'Saucisson',d:'',r:'PIKO SAUC VARK100G',c:300},
+{id:16,g:'eten',n:'Lolly roze',s:'Lolly',d:'',r:'LOLLY ROZE',c:359},
+{id:17,g:'eten',n:'Kinder Bueno White 312 g',s:'Kinder Bueno',d:'',r:'K BUENO WHITE 312G',c:539},
+{id:18,g:'eten',n:"M&M's Choco pouch",s:"M&M's",d:'',r:"M&M'S CHOCO POUCH",c:675},
+{id:19,g:'eten',n:'Car Gum Luciole',s:'Car Gum',d:'',r:'CAR GUM LUCIOLE',c:125},
+{id:20,g:'eten',n:"Bret's chips peper",s:"Bret's chips",d:'',r:"CHIPS BRET'S POIVR",c:299},
+{id:21,g:'ander',n:'🥦 Groenten',s:'Groenten',d:'',r:'betaald door Egon',c:2500}];
+const TOTAL=14180;
+const SL=[{k:'egon',def:'Egon',c:'--p0'},{k:'v1',def:'Wouter',c:'--p1'},{k:'v2',def:'Kenzo',c:'--p2'}];
+const ALL=I.map(x=>x.id);
+const $=id=>document.getElementById(id);
+const slot=k=>SL.find(s=>s.k===k);
+const eur=c=>'€'+(c/100).toFixed(2).replace('.',',');
+const esc=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const tidy=s=>String(s).replace(/[|\n\r<>]/g,'').trim().slice(0,20);
+const def=k=>({name:slot(k).def,items:k==='egon'?ALL.slice():[]});
+const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const KEY='bon-2111-';
+function cleanOne(v,k){
+  if(!v||typeof v!=='object')return null;
+  const ids=Array.isArray(v.items)?v.items.map(Number).filter(n=>ALL.includes(n)):[];
+  const nm=slot(k).def;
+  return {name:nm,items:ALL.filter(x=>ids.includes(x))};
+}
+function clean(o){const r={};if(o&&typeof o==='object')for(const s of SL){const c=cleanOne(o[s.k],s.k);if(c)r[s.k]=c}return r}
+
+let local=clean(LS.get(KEY+'picks'));
+let me=LS.get(KEY+'me'); if(!slot(me))me=null;
+let remote={},shared=false,dirty={},mode='wait';
+const get=k=>shared?(remote[k]||def(k)):(local[k]||remote[k]||def(k));
+
+function split(){
+  const tot={egon:0,v1:0,v2:0},cnt={egon:0,v1:0,v2:0},per={};
+  for(const it of I){
+    const P=SL.filter(s=>get(s.k).items.includes(it.id)).map(s=>s.k);
+    const pay=P.length?P:['egon'];
+    const base=Math.floor(it.c/pay.length);let rem=it.c-base*pay.length;
+    for(const k of pay){tot[k]+=base+(rem>0?1:0);if(rem>0)rem--}
+    for(const k of P)cnt[k]++;
+    per[it.id]=P;
+  }
+  return {tot,cnt,per};
+}
+
+/* build static parts once */
+$('list').innerHTML=G.map(g=>{
+  const its=I.filter(x=>x.g===g.k),sub=its.reduce((a,x)=>a+x.c,0);
+  return `<section class="sec"><h2><span>${g.t}</span><span class="mono">${eur(sub)}</span></h2>${its.map(x=>`<button type="button" class="row" id="r${x.id}" data-id="${x.id}" aria-pressed="false"><span class="tick" aria-hidden="true"></span><span class="what"><span class="name">${esc(x.n)}</span><span class="sub">${esc(x.d?x.d+' · '+x.r:x.r)}</span></span><span class="amt mono"><b>${eur(x.c)}</b><small></small></span><span class="dots"></span></button>`).join('')}</section>`;
+}).join('');
+$('who').innerHTML=SL.map(s=>`<button type="button" class="chip" data-k="${s.k}" aria-pressed="false" style="--c:var(${s.c})"><span class="dot" aria-hidden="true"></span><span class="cn"></span></button>`).join('');
+
+function put(k,v){
+  if(shared){remote[k]=v;dirty[k]=true;queue(k)}
+  else{local[k]=v;LS.set(KEY+'picks',local)}
+  paint();
+}
+function nudge(){const w=$('who');w.classList.remove('pulse');void w.offsetWidth;w.classList.add('pulse');$('wholab').textContent='Kies eerst wie je bent';w.scrollIntoView({behavior:'smooth',block:'center'})}
+function toggle(id){
+  if(!me){nudge();return}
+  const v=get(me),s=new Set(v.items);s.has(id)?s.delete(id):s.add(id);
+  put(me,{name:v.name,items:ALL.filter(x=>s.has(x))});
+}
+function setAll(on){if(!me){nudge();return}const v=get(me);put(me,{name:v.name,items:on?ALL.slice():[]})}
+
+function friendText(k){
+  const v=get(k),R=split(),its=I.filter(x=>v.items.includes(x.id));
+  return [`Boodschappen 21/11, mijn keuze (${v.name}):`,...its.map(x=>'• '+x.n),its.length?`Mijn deel nu: ${eur(R.tot[k])}`:'Niets aangevinkt',`code: ${k}|${v.name}|${v.items.join('.')}`].join('\n');
+}
+function overviewText(){
+  const R=split(),L=[`Boodschappen 21/11, totaal ${eur(TOTAL)}`];
+  for(const s of SL.slice(1)){const v=get(s.k),its=I.filter(x=>v.items.includes(x.id)).map(x=>x.s);L.push(`${v.name}: ${eur(R.tot[s.k])}${its.length?' ('+its.join(', ')+')':''}`)}
+  L.push(`Egon zelf: ${eur(R.tot.egon)}`);
+  return L.join('\n');
+}
+const msg=()=>me==='egon'?overviewText():friendText(me);
+
+const STATUS={
+  wait:()=>'Bezig met laden...',
+  local:()=>me==='egon'?'Geen verbinding: keuzes staan voorlopig alleen op dit toestel.':'Geen verbinding: je keuze staat voorlopig alleen op dit toestel. Stuur ze eventueel door met de knop.',
+  live:()=>'Live: Egon, Wouter & Kenzo zien dezelfde keuzes, meteen opgeslagen.',
+  slow:()=>'Verbinding even weg. Je wijziging wordt opnieuw verstuurd.'
+};
+function paint(){
+  const R=split(),mine=me?get(me):null;
+  document.body.style.setProperty('--me',me?`var(${slot(me).c})`:'var(--muted)');
+  $('bon').classList.toggle('nome',!me);
+  for(const it of I){
+    const b=$('r'+it.id),P=R.per[it.id];
+    b.setAttribute('aria-pressed',String(!!(me&&P.includes(me))));
+    b.querySelector('small').textContent=P.length>1?`${eur(Math.round(it.c/P.length))} p.p.`:(P.length?'':'blijft bij Egon');
+    b.querySelector('.dots').replaceChildren(...P.map(k=>{const i=document.createElement('i');i.style.setProperty('--c',`var(${slot(k).c})`);i.textContent=get(k).name;return i}));
+  }
+  for(const c of $('who').children){
+    const k=c.dataset.k,nm=get(k).name;
+    c.setAttribute('aria-pressed',String(k===me));
+    c.querySelector('.dot').textContent=nm.charAt(0).toUpperCase();
+    c.querySelector('.cn').textContent=k==='egon'?'Egon (betaalde)':nm;
+  }
+  $('people').innerHTML=SL.map(s=>{
+    const v=get(s.k),t=R.tot[s.k],n=R.cnt[s.k];
+    const info=s.k==='egon'?`${n} items · eigen deel`:`${n} items · te betalen aan Egon`;
+    return `<div class="person" style="--c:var(${s.c})"><div class="ph"><span class="pn">${esc(v.name)}${s.k===me?' (jij)':''}</span><span class="pa mono">${eur(t)}</span></div><div class="meter"><span style="width:${(t/TOTAL*100).toFixed(1)}%"></span></div><small>${info}</small></div>`;
+  }).join('');
+  $('status').textContent=STATUS[mode]();
+  $('copy').textContent=me==='egon'?'Kopieer overzicht':'Kopieer mijn keuze';
+  $('wa').href='https://wa.me/?text='+encodeURIComponent(me?msg():'');
+  const quiet=mode==='live'&&me!=='egon';
+  $('wa').hidden=!me||quiet;
+  $('copy').hidden=quiet;
+  $('copy2').hidden=quiet;
+  $('imp').hidden=me!=='egon'||mode==='live';
+  $('bar').hidden=!me;
+  if(me){$('barlab').textContent=me==='egon'?'Jouw eigen deel':'Jouw deel';$('barval').textContent=eur(R.tot[me])}
+}
+function choose(k){
+  me=k;LS.set(KEY+'me',k);$('wholab').textContent='Wie ben jij?';
+  paint();
+}
+
+/* events */
+$('list').addEventListener('click',e=>{const b=e.target.closest('.row');if(b)toggle(+b.dataset.id)});
+$('who').addEventListener('click',e=>{const c=e.target.closest('.chip');if(c)choose(c.dataset.k)});
+$('all').addEventListener('click',()=>setAll(true));
+$('none').addEventListener('click',()=>setAll(false));
+async function copy(btn){
+  if(!me){nudge();return}
+  const t=msg(),old=btn.textContent,fb=$('fb');
+  try{await navigator.clipboard.writeText(t);btn.textContent='Gekopieerd';fb.hidden=true}
+  catch(e){fb.hidden=false;fb.value=t;fb.focus();fb.select();btn.textContent='Kopieer de tekst hieronder';fb.scrollIntoView({block:'center'})}
+  setTimeout(()=>{btn.textContent=old},2200);
+}
+$('copy').addEventListener('click',e=>copy(e.currentTarget));
+$('copy2').addEventListener('click',e=>copy(e.currentTarget));
+$('read').addEventListener('click',()=>{
+  const re=/code:\s*(egon|v1|v2)\|([^|\n]*)\|([\d.]*)/gi;let m,names=[];
+  while((m=re.exec($('paste').value))){
+    const k=m[1].toLowerCase(),ids=m[3].split('.').map(Number).filter(x=>ALL.includes(x));
+    const nm=slot(k).def;
+    put(k,{name:nm,items:ALL.filter(x=>ids.includes(x))});names.push(nm);
+  }
+  $('impmsg').textContent=names.length?`Ingelezen: ${names.join(', ')}.`:'Geen code gevonden. Plak het volledige bericht, met de regel die met "code:" begint.';
+  if(names.length)$('paste').value='';
+});
+
+/* live sync via Firebase Realtime Database (REST + streaming) */
+const DBURL='https://nov-2fca3-default-rtdb.europe-west1.firebasedatabase.app/bon';
+const busy={},again={},tmr={};let lastDone=0,pt=null,connected=false;
+function parseAll(o){
+  const r={};
+  if(o&&typeof o==='object')for(const s of SL){const v=o[s.k];if(v&&typeof v.items==='string'){const ids=v.items.split('.').map(Number);r[s.k]={name:s.def,items:ALL.filter(x=>ids.includes(x))}}}
+  return r;
+}
+async function pull(){
+  const started=Date.now();
+  try{
+    const res=await fetch(DBURL+'.json',{cache:'no-store'});
+    if(!res.ok)throw new Error(res.status);
+    const o=await res.json();
+    if(started<lastDone){schedulePull();return}
+    const nr=parseAll(o);
+    for(const k of Object.keys(dirty))if(dirty[k]&&remote[k])nr[k]=remote[k];
+    if(!connected){
+      connected=true;shared=true;
+      for(const s of SL)if(local[s.k]&&!nr[s.k]){nr[s.k]=local[s.k];remote[s.k]=local[s.k];dirty[s.k]=true;queue(s.k)}
+    }
+    remote=nr;mode='live';paint();
+  }catch(e){if(!connected){mode='local';paint()}else{mode='slow';paint()}}
+}
+function schedulePull(){clearTimeout(pt);pt=setTimeout(pull,200)}
+function queue(k){clearTimeout(tmr[k]);tmr[k]=setTimeout(()=>flush(k),350)}
+async function flush(k){
+  if(busy[k]){again[k]=true;return}
+  busy[k]=true;let ok=false;
+  try{
+    const res=await fetch(DBURL+'/'+k+'.json',{method:'PUT',body:JSON.stringify({items:remote[k].items.join('.')})});
+    ok=res.ok;
+  }catch(e){ok=false}
+  busy[k]=false;
+  if(again[k]){again[k]=false;flush(k);return}
+  if(ok){dirty[k]=false;lastDone=Date.now();if(mode!=='live'){mode='live';paint()}schedulePull()}
+  else{mode='slow';paint();setTimeout(()=>{if(dirty[k])flush(k)},4000)}
+}
+function goLocal(){}
+if(me)choose(me);else paint();
+pull();
+try{
+  const es=new EventSource(DBURL+'.json');
+  es.addEventListener('put',schedulePull);
+  es.addEventListener('patch',schedulePull);
+}catch(e){}
+setInterval(pull,20000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)pull()});
+}
+</script>
+</body>
+</html>
